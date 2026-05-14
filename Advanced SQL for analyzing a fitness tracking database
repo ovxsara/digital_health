@@ -1,0 +1,116 @@
+-- creating tables
+CREATE TABLE users ( id INTEGER PRIMARY KEY, name TEXT, age INTEGER, gender TEXT);
+
+CREATE TABLE activities (id INTEGER PRIMARY KEY, user_id INTEGER, activity_date TEXT, activity_type TEXT, duration_minutes INTEGER, calories_burned INTEGER);
+
+CREATE TABLE workouts (id INTEGER PRIMARY KEY, user_id INTEGER, workout_date TEXT, workout_type TEXT, intensity INTEGER);
+-- adding users
+INSERT INTO users (id, name, age, gender) VALUES
+  (1, 'Sarra', 24, 'Female'),
+  (2, 'Lina', 28, 'Female'),
+  (3, 'Mona', 31, 'Female'),
+  (4, 'Nour', 22, 'Female'),
+  (5, 'Omar', 29, 'Male'),
+  (6, 'Yousef', 35, 'Male');
+  
+-- adding activities
+  INSERT INTO activities (id, user_id, activity_date, activity_type, duration_minutes, calories_burned) VALUES
+  (1, 1, '2026-01-12', 'Running',         35, 330),
+  (2, 1, '2026-01-15', 'Pilates',         50, 220),
+  (3, 1, '2026-01-20', 'Padel',           60, 480),
+
+  (4, 2, '2026-01-10', 'Lagree',          45, 310),
+  (5, 2, '2026-01-18', 'Weight Training', 55, 420),
+  (6, 2, '2026-01-24', 'Running',         25, 240),
+
+  (7, 3, '2026-01-09', 'Padel',           75, 620),
+  (8, 3, '2026-01-17', 'Weight Training', 40, 300),
+  (9, 3, '2026-01-25', 'Pilates',         60, 260),
+
+  (10, 4, '2026-01-11', 'Running',        20, 190),
+  (11, 4, '2026-01-16', 'Lagree',         40, 290),
+  (12, 4, '2026-01-22', 'Pilates',        45, 210),
+
+  (13, 5, '2026-01-08', 'Weight Training',60, 500),
+  (14, 5, '2026-01-19', 'Padel',          50, 430),
+
+  (15, 6, '2026-01-14', 'Running',        45, 420),
+  (16, 6, '2026-01-21', 'Weight Training',50, 410);
+
+-- adding workouts
+INSERT INTO workouts (id, user_id, workout_date, workout_type, intensity) VALUES
+  (1, 1, '2026-01-12', 'Running',         7),
+  (2, 1, '2026-01-15', 'Pilates',         5),
+  (3, 1, '2026-01-20', 'Padel',           8),
+
+  (4, 2, '2026-01-10', 'Lagree',          8),
+  (5, 2, '2026-01-18', 'Weight Training', 8),
+  (6, 2, '2026-01-24', 'Running',         6),
+
+  (7, 3, '2026-01-09', 'Padel',           9),
+  (8, 3, '2026-01-17', 'Weight Training', 7),
+
+  (9, 4, '2026-01-11', 'Running',         6),
+  (10,4, '2026-01-16', 'Lagree',          8),
+
+  (11,5, '2026-01-08', 'Weight Training', 8),
+  (12,5, '2026-01-19', 'Padel',           7),
+
+  (13,6, '2026-01-14', 'Running',         7),
+  (14,6, '2026-01-21', 'Weight Training', 7);
+  
+
+-- queries
+-- user demographics
+SELECT
+  (SELECT COUNT(*) FROM users) AS total_users,
+  (SELECT AVG(age) FROM users) AS average_age,
+  gender,
+  COUNT(*) AS users_in_gender,
+  ROUND(COUNT(*) * 100.0 / (SELECT COUNT(*) FROM users), 2) AS gender_percent
+FROM users
+GROUP BY gender
+ORDER BY users_in_gender DESC;
+
+-- user activity summary 
+SELECT
+  u.id,
+  u.name,
+  COUNT(a.id) AS total_activities,
+  COALESCE(SUM(a.calories_burned), 0) AS total_calories_burned
+FROM users u
+LEFT JOIN activities a
+  ON a.user_id = u.id
+GROUP BY u.id, u.name
+ORDER BY total_calories_burned DESC, total_activities DESC;
+
+-- popular activities
+SELECT
+  activity_type,
+  COUNT(*) AS times_performed
+FROM activities
+GROUP BY activity_type
+ORDER BY times_performed DESC, activity_type;
+
+-- workout summary 
+SELECT
+  u.id,
+  u.name,
+  COUNT(w.id) AS total_workouts,
+  ROUND(AVG(w.intensity), 2) AS avg_intensity
+FROM users u
+LEFT JOIN workouts w
+  ON w.user_id = u.id
+GROUP BY u.id, u.name
+ORDER BY total_workouts DESC, avg_intensity DESC;
+
+-- find the top performers
+SELECT
+  u.name,
+  SUM(a.calories_burned) AS total_calories_burned
+FROM users u
+JOIN activities a
+  ON a.user_id = u.id
+GROUP BY u.id, u.name
+ORDER BY total_calories_burned DESC LIMIT 3;
+
